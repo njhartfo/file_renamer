@@ -88,6 +88,25 @@ class Window(QWidget, Ui_Window):
 		self.renameFilesButton.setEnabled(False)
 		
 	def _runRenamerThread(self):
+		prefix = self.prefixEdit.text()
+		self._thread = QThread()
+		self._renamer = Renamer(
+			files = tupe(self._files),
+			prefix=prefix,
+		)
+		self._renamer.moveToThread(self._thread)
+		# Rename
+		self._thread.started.connect(self._renamer.renameFiles)
+		# Update state
+		self._renamer.renameFile.connect(self._updateStateWhenFileRenamed)
+		self._renamer.progressed.connect(self._updateProgressBar)
+		self._renamer.finished.connect(self._updateStateWhenNoFiles)
+		# Clean up
+		self._renamer.finished.connect(self._thread.quit)
+		self._renamer.finished.connect(self._renamer.deleteLater)
+		self._renamer.finished.connect(self._thread.deleteLater)
+		# Run
+		self._thread.start()
 		
 	def _updateStateWhenFileRenamed(self, newFile):
 		self._files.popleft()

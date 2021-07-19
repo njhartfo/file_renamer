@@ -14,7 +14,13 @@ class Renamer(QObject):
     self._prefix = prefix
   
   def renameFiles(self):
-    # parse through files
-    # join under parent file
-    # rename
-    # emit
+    for fileNumber, file in enumerate(self._files, 1):
+      newFile = file.parent.joinpath(
+        f"{self._prefix}{str(fileNumber)}{file.suffix}"
+      )
+      file.rename(newFile)
+      time.sleep(0.1) # adjust sleep time to rename files quicker
+      self.progressed.emit(fileNumber)
+      self.renamedFile.emit(newFile)
+    self.progressed.emit(0)
+    self.finished.emit()
